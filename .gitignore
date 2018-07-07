@@ -1,0 +1,6 @@
+*.png
+*.pdf
+*.json
+*.docx
+dask-worker-space
+__pycache__

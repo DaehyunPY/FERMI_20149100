@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
 from httplib2 import Http
+from itertools import combinations
 
-from numpy import linspace, exp, abs, gradient, log, pi
+from numpy import linspace, exp, gradient, log, pi, stack
 import matplotlib.pyplot as plt
 from apiclient import discovery
 from oauth2client import client
@@ -34,18 +36,19 @@ df = DataFrame(sliced[1:], columns=sliced[0])
 
 # %%
 t0, t1 = with_unit("0 fs"), with_unit("1000 fs")
-omega_str = "24.44 eV"
+omega_str = "24.48 eV"
 fwhm_str = "90 fs"
 omega = with_unit(omega_str)
 sigma = with_unit(fwhm_str) / (8*log(2))**0.5  # fwhm to sigma
-title = "Photon: {}, Pulse duration: {}".format(omega_str, fwhm_str)
+title = f"Photon: {omega_str}, Pulse duration: {fwhm_str}"
 
 populations = [n ** -1.5 * (2*pi)**0.5 * sigma * exp(-((omega-lev)*sigma)**2/2)
                for _, (n, lev) in df[["n", "level"]].iterrows()]
 t = linspace(t0, t1, 1000)
-waves = (-1j * exp(1j*lev*t) * pop
-         for pop, lev in zip(populations, df["level"]))
-y = abs(sum(waves))**2
+waves = stack([-1j * exp(1j*lev*t) * pop
+               for pop, lev in zip(populations, df["level"])])
+wavesqs = (waves[None, :, :]*waves[:, None, :].conj()).real
+y = wavesqs.sum((0,1))
 dy = gradient(y) > 0
 where = dy[:-1] & ~dy[1:]
 
@@ -72,12 +75,37 @@ plt.ylabel("Population of wave packet\nat a certain distance")
 plt.xlim(0, 1000)
 plt.ylim(0, None)
 plt.yticks([0], [0])
+
 plt.tight_layout()
-plt.savefig("simul_wave_packets ({}).pdf".format(title))
-plt.savefig("simul_wave_packets ({}).png".format(title))
+# plt.savefig(f"simul_wave_packets ({title}).pdf")
+# plt.savefig(f"simul_wave_packets ({title}).png")
 plt.show()
 
 print("""\
 Local maximums at:
-    {}""".format("\n    ".join("({}) {:4.0f} fs".format(i, v)
+    {}""".format("\n    ".join(f"({i}) {v:4.0f} fs"
                  for i, v in enumerate(as_femto_sec(t[1:][where])))))
+    
+# %%
+plt.figure(figsize=(8, 6))
+plt.subplot(211)
+plt.plot(as_femto_sec(t), y, 'k')
+plt.yticks([0], [0])
+plt.xlim(0, 1000)
+plt.grid(True)
+plt.title("Population of wave packet at a certain distance")
+
+plt.subplot(212)
+for (i, ni), (j, nj) in combinations(df[(10<df["n"])&(df["n"]<15)]["n"]
+                                     .iteritems(), 2):
+    plt.plot(as_femto_sec(t), wavesqs[i, j], label=f'n={ni}, n={nj}')
+plt.yticks([0], [0])
+plt.xlim(0, 1000)
+plt.grid(True)
+plt.xlabel("Time (fs)")
+
+plt.tight_layout()
+plt.figlegend()
+# plt.savefig(f"simul_wave_packets_part ({title}).pdf")
+# plt.savefig(f"simul_wave_packets_part ({title}).png")
+plt.show()
