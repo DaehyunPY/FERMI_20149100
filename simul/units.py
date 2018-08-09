@@ -2,9 +2,11 @@ from math import pi
 
 from numba import jit
 
-__all__ = ['in_degree', 'to_degree', 'in_nano_sec', 'to_nano_sec', 'in_femto_sec', 'to_femto_sec', 'in_milli_meter',
-           'to_milli_meter', 'in_volt', 'to_volt', 'in_gauss', 'to_gauss', 'in_electron_volt', 'to_electron_volt',
-           'in_atomic_mass', 'to_atomic_mass', 'unformat_to_num']
+__all__ = [
+    'in_degree', 'to_degree', 'in_nano_sec', 'to_nano_sec', 'in_femto_sec', 'to_femto_sec', 'in_milli_meter',
+    'to_milli_meter', 'in_volt', 'to_volt', 'in_gauss', 'to_gauss', 'in_electron_volt', 'to_electron_volt',
+    'in_atomic_mass', 'to_atomic_mass', 'unformat_to_num',
+]
 
 ma = 1.66053892173e-27  # atomic mass
 c = 299792458  # speed of light
