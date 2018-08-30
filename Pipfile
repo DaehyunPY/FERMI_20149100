@@ -8,8 +8,10 @@ numpy = "*"
 pandas = "*"
 numba = "*"
 importlib-resources = "*"
-jupyter = "*"
 matplotlib = "*"
+jupyterlab = "*"
+altair = "*"
+xlrd = "*"
 
 [dev-packages]
 
