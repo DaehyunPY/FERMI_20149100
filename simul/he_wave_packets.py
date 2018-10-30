@@ -1,37 +1,25 @@
 from functools import lru_cache
 from typing import Optional
 
-from pandas import read_excel
-from numpy import sin, pi, exp, log, ndarray, gradient, concatenate
+from pandas import read_excel, DataFrame
+from numpy import sin, pi, exp, log, ndarray
 from importlib_resources import path
-from numba import jit
 
 from . import rsc
+from .tools import gauss
 from .units import in_femto_sec, in_electron_volt, in_degree
 
 
-__all__ = [
-    'gauss', 'ispeak', 'HeWavePackets',
-]
+__all__ = ['HeWavePackets']
 
 
 with path(rsc, 'he_levels.xlsx') as fp:
-    target = read_excel(fp, 'He levels')
-
-
-@jit
-def gauss(x: float, sigma: float) -> float:
-    return 1 / (2*pi)**0.5 * exp(-(x/sigma)**2/2)
-
-
-@jit
-def ispeak(arr: ndarray) -> ndarray:
-    diff = gradient(arr)  # shape: k
-    ispos = 0 < diff  # shape: k
-    return concatenate([[False], ispos[:-1] & ~ispos[1:]])  # shape: k
+    target = read_excel(fp, 'Levels')
 
 
 class HeWavePackets:
+    target = target
+
     def __init__(self,
                  sigma: float,
                  k0: float,
@@ -60,11 +48,10 @@ class HeWavePackets:
                               phi: float = 0,
                               amp: float = 1) -> 'HeWavePackets':
         """
-        :param fwhm: fwhm of pulse intensity in femto-sec
+        :param fwhm: FWHM of pulse intensity (square of pulse) in time domain, femto-sec
         :param k0: in eV
         :param dt: in femto-sec
         :param phi: in degree
-        :return: WavePackets
         """
         return HeWavePackets(
             sigma = in_femto_sec(fwhm) / (8 * log(2))**0.5 * 2**0.5,
@@ -84,10 +71,16 @@ class HeWavePackets:
 
     @property
     def tdim_fwhm(self) -> float:
+        """
+        FWHM of pulse intensity (square of pulse) in time domain
+        """
         return self.__sigma * (8 * log(2))**0.5 / 2**0.5
 
     @property
     def kdim_sigma(self) -> float:
+        """
+        FWHM of pulse intensity (square of pulse) in energy domain
+        """
         return 1 / self.__sigma
 
     @property
@@ -118,11 +111,16 @@ class HeWavePackets:
 
     @property
     def target_nlev(self) -> ndarray:
-        return target['n'].values
+        return self.target['n'].values
+
+    @property
+    def target_strengths(self) -> ndarray:
+        mu = 1
+        return mu * self.target_nlev ** -1.5
 
     @property
     def target_klev(self) -> ndarray:
-        return target['level'].values
+        return self.target['level'].values
 
     def pulses(self, t: (float, ndarray)) -> (float, ndarray):
         return (
@@ -150,7 +148,7 @@ class HeWavePackets:
 
     @lru_cache(maxsize=None)
     def target_poplev(self) -> ndarray:
-        return self.target_nlev ** -1.5 * self.pulses_k(self.target_klev)  # shape: n
+        return self.target_strengths * self.pulses_k(self.target_klev)  # shape: n
 
     def __call__(self, t: ndarray) -> ndarray:
         pop = self.target_poplev()  # shape: n
