@@ -1,0 +1,28 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+importlib_resources = "*"
+pyyaml = "*"
+h5py = "*"
+cytoolz = "*"
+ipython = ">=7"
+ipywidgets = "*"
+jupyter = "*"
+jupyterlab = "*"
+numpy = "*"
+scipy = "*"
+matplotlib = "*"
+bokeh = "*"
+altair = "*"
+holoviews = "*"
+lmfit = "*"
+vmitools = {git = "https://github.com/DaehyunPY/vmitools.git"}
+
+[dev-packages]
+pylint = "*"
+
+[requires]
+python_version = "3.7"

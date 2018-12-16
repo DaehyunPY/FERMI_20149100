@@ -1,19 +1,17 @@
-version: '3.1'
+version: '2'
 services:
   jupyter:
-    image: daehyunpy/playground-python:v201809.2
-    command:
-      - python
-      - -m
-      - jupyter
-      - lab
-      - --allow-root
-      - --config=/app/jupyter_notebook_config.json
+    build: ./Docker
+    image: daehyunpy/fermi-20149100
+    command: bash -c "umask 0002 && python -m jupyter lab --config=/app/jupyter_notebook_config.json --allow-root"
+    restart: unless-stopped
+    # user: <uid>:<gid>
+    # group_add: []
+    environment:
+      HOME: /app
     ports:
-      - 4040
-      - 18888:8888
+      - 8888
     volumes:
-      - .:/data
-      - ./jupyter_notebook_config.json:/app/jupyter_notebook_config.json
-      - ./local.pth:/app/.venv/lib/python3.6/site-packages/local.pth
-      - ~/.jupyter:/root/.jupyter
+      - ./Notebooks:/data
+      - ./jupyter_notebook_config.json:/app/jupyter_notebook_config.json:ro
+      - ./local.pth:/app/.venv/lib/python3.6/site-packages/local.pth:ro
