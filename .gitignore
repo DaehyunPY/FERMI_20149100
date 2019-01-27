@@ -7,11 +7,18 @@ Icon*
 *.npy
 *.png
 *.pdf
-*.json
 *.docx
+*.zip
 ~$*
+
 /.idea
 /.vscode
+/Data
 /Figures
 /Reports
 /References
+/Env
+/*.xlsx
+
+# For security
+/jupyter_notebook_config.json
