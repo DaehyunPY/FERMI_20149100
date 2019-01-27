@@ -1,17 +1,16 @@
-version: '2'
+version: '3.1'
 services:
   jupyter:
     build: ./Docker
     image: daehyunpy/fermi-20149100
-    command: bash -c "umask 0002 && python -m jupyter lab --config=/app/jupyter_notebook_config.json --allow-root"
+    command: bash -c "umask 0002 && python -m jupyter lab --allow-root --config=/app/jupyter_notebook_config.json"
     restart: unless-stopped
     # user: <uid>:<gid>
-    # group_add: []
-    environment:
-      HOME: /app
     ports:
-      - 8888
+      - 32769:8888
     volumes:
       - ./Notebooks:/data
+      - ./Data:/data/Data
+      - ./Figures:/data/Figures
       - ./jupyter_notebook_config.json:/app/jupyter_notebook_config.json:ro
       - ./local.pth:/app/.venv/lib/python3.6/site-packages/local.pth:ro
