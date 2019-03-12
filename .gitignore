@@ -9,11 +9,12 @@ Icon*
 *.pdf
 *.docx
 *.zip
+*.h5
 ~$*
 
 /.idea
 /.vscode
-/Data
+/Data/Run_*
 /Figures
 /Reports
 /References
