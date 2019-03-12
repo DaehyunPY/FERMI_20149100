@@ -7,10 +7,11 @@ services:
     restart: unless-stopped
     # user: <uid>:<gid>
     ports:
-      - 32769:8888
+      - 8888
     volumes:
       - ./Notebooks:/data
+      - ./Packages:/data/Packages
       - ./Data:/data/Data
       - ./Figures:/data/Figures
       - ./jupyter_notebook_config.json:/app/jupyter_notebook_config.json:ro
-      - ./local.pth:/app/.venv/lib/python3.6/site-packages/local.pth:ro
+      - ./local.pth:/opt/anaconda/lib/python3.7/site-packages/local.pth:ro
