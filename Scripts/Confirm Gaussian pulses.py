@@ -5,9 +5,7 @@ import numpy as np
 import simul2
 
 #%% Confirm simul2.sqr_at_t method
-field = simul2.EFTwinGaussianPulses.in_units(fwhm=(100, "au"),
-                                             k0=(0.1, "au"),
-                                             dt=(400, "au"))
+field = simul2.EFTwinGaussianPulses.in_units(fwhm=100, k0=0.1, dt=400)
 n = 601
 t = np.linspace(-100, 500, n)
 y = field.at_t(t)
@@ -22,9 +20,7 @@ plt.tight_layout()
 plt.show()
 
 #%% Confirm simul2.at_k and simul2.sqr_at_k methods
-field = simul2.EFTwinGaussianPulses.in_units(fwhm=(1, "au"),
-                                             k0=(10, "au"),
-                                             dt=(5, "au"))
+field = simul2.EFTwinGaussianPulses.in_units(fwhm=1, k0=10, dt=5)
 n = 4501
 t = np.linspace(-20, 25, n)
 dt = t[1] - t[0]
@@ -45,7 +41,8 @@ plt.yticks([0])
 plt.subplot(312)
 plt.xlabel("Energy")
 plt.ylabel("Phase (deg)")
-plt.plot(k, simul2.convert_units(np.angle(field.at_k(k)), to="deg"), "grey")
+converted = simul2.Q_(np.angle(field.at_k(k)), "rad").to("deg")
+plt.plot(k, converted, "grey")
 plt.xlim(-20, 20)
 plt.ylim(-180, 180)
 plt.grid(True)
@@ -60,7 +57,8 @@ plt.yticks([0])
 plt.subplot(313)
 plt.xlabel("Energy")
 plt.ylabel("Phase (deg)")
-plt.plot(k, simul2.convert_units(np.angle(z), to="deg"), "grey")
+converted = simul2.Q_(np.angle(z), "rad").to("deg")
+plt.plot(k, converted, "grey")
 plt.xlim(-20, 20)
 plt.ylim(-180, 180)
 plt.grid(True)

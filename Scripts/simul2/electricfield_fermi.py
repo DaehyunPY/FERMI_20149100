@@ -1,14 +1,17 @@
 """
 Refer the details to the journal paper: PRL 115, 114801 (2015).
 """
+from typing import Any
 import numpy as np
 import xarray as xr
 from scipy.special import jv
 
-from .units import ALPHA, convert_units
+from .units import Q_
 from .electricfield import ElectricField
 
 __all__ = ["EFTwinFermiPulses"]
+
+C = Q_("c").to_base_units().m  # speed of light
 
 
 def gauss(x: (float, np.ndarray),
@@ -103,37 +106,68 @@ class EFTwinFermiPulses(ElectricField):
 
     @staticmethod
     def in_units(
-            t: Tuple[np.ndarray, str],
-            nharmonic: int,
-            seed_k0: Tuple[float, str],
-            seed_fwhm: Tuple[float, str],
-            seed_dt: Tuple[float, str],
-            ds_strength: Tuple[float, str],
-            ebeam_energy: Tuple[float, str],
-            ebeam_sigma: Tuple[float, str],
-            ebeam_chirp1: Tuple[float, str],
-            ebeam_chirp2: Tuple[float, str],
-            seed_phi: Tuple[float, str] = (0, "rad"),
-            seed_ramp: Tuple[float, str] = (1, "au"),
-            ebeam_timing: Tuple[float, str] = (0, "au"),
-            ebeam_ramp: Tuple[float, str] = (1, "au"),
+            t: Any,
+            nharmonic: Any,
+            seed_k0: Any,
+            seed_fwhm: Any,
+            seed_dt: Any,
+            ds_strength: Any,
+            ebeam_energy: Any,
+            ebeam_sigma: Any,
+            ebeam_chirp1: Any,
+            ebeam_chirp2: Any,
+            seed_phi: Any = 0,
+            seed_ramp: Any = 1,
+            ebeam_timing: Any = 0,
+            ebeam_ramp: Any = 1,
     ) -> "EFTwinFermiPulses":
         """Initialize ElectricField with familiar units."""
+        t = Q_(t).to_base_units()
+        nharmonic = Q_(nharmonic).to_base_units()
+        seed_k0 = Q_(seed_k0).to_base_units()
+        seed_fwhm = Q_(seed_fwhm).to_base_units()
+        seed_dt = Q_(seed_dt).to_base_units()
+        ds_strength = Q_(ds_strength).to_base_units()
+        ebeam_energy = Q_(ebeam_energy).to_base_units()
+        ebeam_sigma = Q_(ebeam_sigma).to_base_units()
+        ebeam_chirp1 = Q_(ebeam_chirp1).to_base_units()
+        ebeam_chirp2 = Q_(ebeam_chirp2).to_base_units()
+        seed_phi = Q_(seed_phi).to_base_units()
+        seed_ramp = Q_(seed_ramp).to_base_units()
+        ebeam_timing = Q_(ebeam_timing).to_base_units()
+        ebeam_ramp = Q_(ebeam_ramp).to_base_units()
+        if not ((t.check("[time]") or t.unitless)
+                and nharmonic.dimensionless
+                and (seed_k0.check("[energy]") or seed_k0.unitless)
+                and (seed_fwhm.check("[time]") or seed_fwhm.unitless)
+                and (seed_dt.check("[time]") or seed_dt.unitless)
+                and (ds_strength.check("[length]") or ds_strength.unitless)
+                and (ebeam_energy.check("[energy]") or ebeam_energy.unitless)
+                and (ebeam_sigma.check("[length]") or ebeam_sigma.unitless)
+                and (ebeam_chirp1.check("[length] / [time]")
+                     or ebeam_chirp1.unitless)
+                and (ebeam_chirp2.check("[length] / [time]**2")
+                     or ebeam_chirp2.unitless)
+                and seed_phi.dimensionless
+                and seed_ramp.dimensionless
+                and (ebeam_timing.check("[time]") or ebeam_timing.unitless)
+                and (ebeam_ramp.check("[length]") or ebeam_ramp.unitless)):
+            raise ValueError("An assigned dimension is mismatched.")
         return EFTwinFermiPulses(
-            t=convert_units(*t),
-            nharmonic=nharmonic,
-            seed_k0=convert_units(*seed_k0),
-            seed_sigma=convert_units(*seed_fwhm) / (8 * np.log(2))**0.5,
-            seed_dt=convert_units(*seed_dt),
-            ds_strength=convert_units(*ds_strength),
-            ebeam_energy=convert_units(*ebeam_energy),
-            ebeam_sigma=convert_units(*ebeam_sigma),
-            ebeam_chirp1=convert_units(*ebeam_chirp1),
-            ebeam_chirp2=convert_units(*ebeam_chirp2),
-            seed_phi=convert_units(*seed_phi),
-            seed_ramp=convert_units(*seed_ramp),
-            ebeam_timing=convert_units(*ebeam_timing),
-            ebeam_ramp=convert_units(*ebeam_ramp),
+            t=t.m,
+            nharmonic=nharmonic.m,
+            seed_k0=seed_k0.m,
+            seed_sigma=seed_fwhm.m / (8 * np.log(2))**0.5,
+            seed_dt=seed_dt.m,
+            ds_strength=ds_strength.m,
+            ebeam_energy=ebeam_energy.m,
+            ebeam_sigma=ebeam_sigma.m,
+            ebeam_chirp1=ebeam_chirp1.m,
+            ebeam_chirp2=ebeam_chirp2.m,
+            seed_phi=seed_phi.m,
+            seed_ramp=seed_ramp.m,
+            ebeam_timing=ebeam_timing.m,
+            ebeam_ramp=ebeam_ramp.m,
         )
 
     def __seed_field(self, t: (float, np.ndarray)) -> (complex, np.ndarray):
@@ -155,7 +189,6 @@ class EFTwinFermiPulses(ElectricField):
 
     def __bunching(self, t: (float, np.ndarray)) -> (complex, np.ndarray):
         """Bunching factor."""
-        c = 1 / ALPHA  # speed of light in atomic units
         n = self.__nharmonic
         k0 = self.__seed_k0
         e0 = self.__ebeam_energy
@@ -164,9 +197,9 @@ class EFTwinFermiPulses(ElectricField):
         z = self.__seed_field(t)  # dims: [t]
         e = self.__ebeam_profile(t)  # dims: [t]
         acap = self.__ebeam_ramp * np.abs(z)  # dims: [t]
-        bcap = r * k0 / c * esigma / e0
+        bcap = r * k0 / C * esigma / e0
         phis = np.unwrap(np.angle(z))  # dims: [t]
-        phie = r * k0 / c * e / e0  # dims: [t]
+        phie = r * k0 / C * e / e0  # dims: [t]
         return (np.exp(-(n * bcap)**2 / 2)
                 * jv(n, -n * bcap * acap)
                 * np.exp(1j * n * (phis + phie)))

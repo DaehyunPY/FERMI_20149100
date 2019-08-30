@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Tuple, Any
 
 import numpy as np
 import xarray as xr
 
-from .units import convert_units
+from .units import Q_
 
 __all__ = [
     "ElectricField",
@@ -85,14 +85,19 @@ class EFGaussianPulse(ElectricField):
         self.__ampprime = (8 * np.pi * amp**2 * sigma**2)**0.25
 
     @staticmethod
-    def in_units(fwhm: Tuple[float, str],
-                 k0: Tuple[float, str],
-                 amp: Tuple[float, str] = (1, "au")) -> "EFGaussianPulse":
+    def in_units(fwhm: Any, k0: Any, amp: Any) -> "EFGaussianPulse":
         """Initialize ElectricField with familiar units."""
+        fwhm = Q_(fwhm).to_base_units()
+        k0 = Q_(k0).to_base_units()
+        amp = Q_(amp).to_base_units()
+        if not ((fwhm.check("[time]") or fwhm.unitless)
+                and (k0.check("[energy]") or k0.unitless)
+                and (amp.check("[energy] / [area]") or amp.unitless)):
+            raise ValueError("An assigned dimension is mismatched.")
         return EFGaussianPulse(
-            sigma=convert_units(*fwhm) / (8 * np.log(2))**0.5,
-            k0=convert_units(*k0),
-            amp=convert_units(*amp),
+            sigma=fwhm.m / (8 * np.log(2))**0.5,
+            k0=k0.m,
+            amp=amp.m,
         )
 
     def at_t(self, t: (float, np.ndarray)) -> (float, np.ndarray):
@@ -161,18 +166,29 @@ class EFTwinGaussianPulses(ElectricField):
         self.__ampprime = (8 * np.pi * amp**2 * sigma**2)**0.25
 
     @staticmethod
-    def in_units(fwhm: Tuple[float, str],
-                 k0: Tuple[float, str],
-                 dt: Tuple[float, str],
-                 phi: Tuple[float, str] = (0, "rad"),
-                 amp: Tuple[float, str] = (1, "au")) -> "EFTwinGaussianPulses":
+    def in_units(fwhm: Any,
+                 k0: Any,
+                 dt: Any,
+                 phi: Any = 0,
+                 amp: Any = 1) -> "EFTwinGaussianPulses":
         """Initialize ElectricField with familiar units."""
+        fwhm = Q_(fwhm).to_base_units()
+        k0 = Q_(k0).to_base_units()
+        dt = Q_(dt).to_base_units()
+        phi = Q_(phi).to_base_units()
+        amp = Q_(amp).to_base_units()
+        if not ((fwhm.check("[time]") or fwhm.unitless)
+                and (k0.check("[energy]") or k0.unitless)
+                and (dt.check("[time]") or dt.unitless)
+                and phi.dimensionless
+                and (amp.check("[energy] / [area]") or amp.unitless)):
+            raise ValueError("An assigned dimension is mismatched.")
         return EFTwinGaussianPulses(
-            sigma=convert_units(*fwhm) / (8 * np.log(2))**0.5,
-            k0=convert_units(*k0),
-            dt=convert_units(*dt),
-            phi=convert_units(*phi),
-            amp=convert_units(*amp),
+            sigma=fwhm.m / (8 * np.log(2))**0.5,
+            k0=k0.m,
+            dt=dt.m,
+            phi=phi.m,
+            amp=amp.m,
         )
 
     def at_t(self, t: (float, np.ndarray)) -> (float, np.ndarray):

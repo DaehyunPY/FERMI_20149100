@@ -4,7 +4,7 @@ from .electricfield_fermi import *
 from .wavepacket import *
 
 __all__ = [
-    "convert_units",
+    "Q_",
     "ElectricField",
     "EFInterpolated",
     "EFGaussianPulse",
