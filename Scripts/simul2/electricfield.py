@@ -88,10 +88,12 @@ class EFGaussianPulse(ElectricField):
     def in_units(fwhm: Any, k0: Any, amp: Any) -> "EFGaussianPulse":
         """Initialize ElectricField with familiar units."""
         fwhm = Q_(fwhm).to_base_units()
-        k0 = Q_(k0).to_base_units()
+        k0 = Q_(k0)
+        if not k0.unitless:
+            k0.ito("hartree", "spectroscopy")
+        k0.ito_base_units()
         amp = Q_(amp).to_base_units()
         if not ((fwhm.check("[time]") or fwhm.unitless)
-                and (k0.check("[energy]") or k0.unitless)
                 and (amp.check("[energy] / [area]") or amp.unitless)):
             raise ValueError("An assigned dimension is mismatched.")
         return EFGaussianPulse(
@@ -173,12 +175,14 @@ class EFTwinGaussianPulses(ElectricField):
                  amp: Any = 1) -> "EFTwinGaussianPulses":
         """Initialize ElectricField with familiar units."""
         fwhm = Q_(fwhm).to_base_units()
-        k0 = Q_(k0).to_base_units()
+        k0 = Q_(k0)
+        if not k0.unitless:
+            k0.ito("hartree", "spectroscopy")
+        k0.ito_base_units()
         dt = Q_(dt).to_base_units()
         phi = Q_(phi).to_base_units()
         amp = Q_(amp).to_base_units()
         if not ((fwhm.check("[time]") or fwhm.unitless)
-                and (k0.check("[energy]") or k0.unitless)
                 and (dt.check("[time]") or dt.unitless)
                 and phi.dimensionless
                 and (amp.check("[energy] / [area]") or amp.unitless)):

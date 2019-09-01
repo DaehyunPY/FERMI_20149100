@@ -42,7 +42,7 @@ def seed(t: (float, np.ndarray),
 
 class EFTwinFermiPulses(ElectricField):
     def __init__(self,
-                 t: np.ndarray,
+                 tsamples: np.ndarray,
                  nharmonic: int,
                  seed_k0: float,
                  seed_sigma: float,
@@ -94,19 +94,20 @@ class EFTwinFermiPulses(ElectricField):
         self.__ebeam_timing = ebeam_timing
         self.__ebeam_ramp = ebeam_ramp
 
-        n = len(t)
-        dt = t[1] - t[0]
+        n = len(tsamples)
+        dt = tsamples[1] - tsamples[0]
         k0 = nharmonic * seed_k0
-        k = k0 + np.fft.fftshift(np.fft.fftfreq(n, dt / 2 / np.pi))
-        y = self.__bunching(t)
+        ksamples = k0 + np.fft.fftshift(np.fft.fftfreq(n, dt / 2 / np.pi))
+        y = self.__bunching(tsamples)
         z = (np.fft.fftshift(np.fft.fft(np.fft.ifftshift(y)))
              * dt / (2 * np.pi)**0.5)
         self.__samples = xr.Dataset({"at_t": (["t"], y), "at_k": (["k"], z)},
-                                    coords={"t": (["t"], t), "k": (["k"], k)})
+                                    coords={"t": (["t"], tsamples),
+                                            "k": (["k"], ksamples)})
 
     @staticmethod
     def in_units(
-            t: Any,
+            tsamples: Any,
             nharmonic: Any,
             seed_k0: Any,
             seed_fwhm: Any,
@@ -122,9 +123,17 @@ class EFTwinFermiPulses(ElectricField):
             ebeam_ramp: Any = 1,
     ) -> "EFTwinFermiPulses":
         """Initialize ElectricField with familiar units."""
-        t = Q_(t).to_base_units()
+        if (isinstance(tsamples, tuple)
+                and len(tsamples) == 2
+                and isinstance(tsamples[1], str)):
+            t = Q_(*tsamples).to_base_units()
+        else:
+            t = Q_(tsamples).to_base_units()
         nharmonic = Q_(nharmonic).to_base_units()
-        seed_k0 = Q_(seed_k0).to_base_units()
+        seed_k0 = Q_(seed_k0)
+        if not seed_k0.unitless:
+            seed_k0.ito("hartree", "spectroscopy")
+        seed_k0.ito_base_units()
         seed_fwhm = Q_(seed_fwhm).to_base_units()
         seed_dt = Q_(seed_dt).to_base_units()
         ds_strength = Q_(ds_strength).to_base_units()
@@ -138,23 +147,22 @@ class EFTwinFermiPulses(ElectricField):
         ebeam_ramp = Q_(ebeam_ramp).to_base_units()
         if not ((t.check("[time]") or t.unitless)
                 and nharmonic.dimensionless
-                and (seed_k0.check("[energy]") or seed_k0.unitless)
                 and (seed_fwhm.check("[time]") or seed_fwhm.unitless)
                 and (seed_dt.check("[time]") or seed_dt.unitless)
                 and (ds_strength.check("[length]") or ds_strength.unitless)
                 and (ebeam_energy.check("[energy]") or ebeam_energy.unitless)
-                and (ebeam_sigma.check("[length]") or ebeam_sigma.unitless)
-                and (ebeam_chirp1.check("[length] / [time]")
+                and (ebeam_sigma.check("[energy]") or ebeam_sigma.unitless)
+                and (ebeam_chirp1.check("[energy] / [time]")
                      or ebeam_chirp1.unitless)
-                and (ebeam_chirp2.check("[length] / [time]**2")
+                and (ebeam_chirp2.check("[energy] / [time]**2")
                      or ebeam_chirp2.unitless)
                 and seed_phi.dimensionless
                 and seed_ramp.dimensionless
                 and (ebeam_timing.check("[time]") or ebeam_timing.unitless)
-                and (ebeam_ramp.check("[length]") or ebeam_ramp.unitless)):
+                and ebeam_ramp.unitless):
             raise ValueError("An assigned dimension is mismatched.")
         return EFTwinFermiPulses(
-            t=t.m,
+            tsamples=t.m,
             nharmonic=nharmonic.m,
             seed_k0=seed_k0.m,
             seed_sigma=seed_fwhm.m / (8 * np.log(2))**0.5,
