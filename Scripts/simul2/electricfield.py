@@ -4,7 +4,7 @@ from typing import Tuple, Any
 import numpy as np
 import xarray as xr
 
-from .units import Q_
+from .units import quantity
 
 __all__ = [
     "ElectricField",
@@ -87,19 +87,10 @@ class EFGaussianPulse(ElectricField):
     @staticmethod
     def in_units(fwhm: Any, k0: Any, amp: Any) -> "EFGaussianPulse":
         """Initialize ElectricField with familiar units."""
-        fwhm = Q_(fwhm).to_base_units()
-        k0 = Q_(k0)
-        if not k0.unitless:
-            k0.ito("hartree", "spectroscopy")
-        k0.ito_base_units()
-        amp = Q_(amp).to_base_units()
-        if not ((fwhm.check("[time]") or fwhm.unitless)
-                and (amp.check("[energy] / [area]") or amp.unitless)):
-            raise ValueError("An assigned dimension is mismatched.")
         return EFGaussianPulse(
-            sigma=fwhm.m / (8 * np.log(2))**0.5,
-            k0=k0.m,
-            amp=amp.m,
+            sigma=quantity(fwhm, fr_default="a_u_time") / (8 * np.log(2))**0.5,
+            k0=quantity(k0, fr_default="hartree", context="spectroscopy"),
+            amp=quantity(amp, fr_default="hartree / bohr**2"),
         )
 
     def at_t(self, t: (float, np.ndarray)) -> (float, np.ndarray):
@@ -174,25 +165,12 @@ class EFTwinGaussianPulses(ElectricField):
                  phi: Any = 0,
                  amp: Any = 1) -> "EFTwinGaussianPulses":
         """Initialize ElectricField with familiar units."""
-        fwhm = Q_(fwhm).to_base_units()
-        k0 = Q_(k0)
-        if not k0.unitless:
-            k0.ito("hartree", "spectroscopy")
-        k0.ito_base_units()
-        dt = Q_(dt).to_base_units()
-        phi = Q_(phi).to_base_units()
-        amp = Q_(amp).to_base_units()
-        if not ((fwhm.check("[time]") or fwhm.unitless)
-                and (dt.check("[time]") or dt.unitless)
-                and phi.dimensionless
-                and (amp.check("[energy] / [area]") or amp.unitless)):
-            raise ValueError("An assigned dimension is mismatched.")
         return EFTwinGaussianPulses(
-            sigma=fwhm.m / (8 * np.log(2))**0.5,
-            k0=k0.m,
-            dt=dt.m,
-            phi=phi.m,
-            amp=amp.m,
+            sigma=quantity(fwhm, fr_default="a_u_time") / (8 * np.log(2))**0.5,
+            k0=quantity(k0, fr_default="hartree", context="spectroscopy"),
+            dt=quantity(dt, fr_default="a_u_time"),
+            phi=quantity(phi, fr_default="rad"),
+            amp=quantity(amp, fr_default="hartree / bohr**2"),
         )
 
     def at_t(self, t: (float, np.ndarray)) -> (float, np.ndarray):
