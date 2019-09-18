@@ -1,0 +1,28 @@
+channels:
+  - defaults
+dependencies:
+  - altair
+  - autopep8
+  - cytoolz
+  - jinja2>=2.10.1
+  - jupyter
+  - matplotlib
+  - netcdf4
+  - notebook>=5.7.8
+  - numba
+  - numpy
+  - pandas
+  - pylint
+  - python>=3.7
+  - rope
+  - scipy
+  - sympy
+  - xarray
+  - xlrd
+  - yapf
+  - pip:
+    - importlib_resources
+    - lmfit
+    - pyabel
+    - vega
+    - git+https://github.com/DaehyunPY/vmitools.git#egg=vmitools
