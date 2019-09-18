@@ -14,12 +14,11 @@ Icon*
 
 /.idea
 /.vscode
-/Data/Run_*
-/Figures
-/Reports
-/References
-/Env
 /*.xlsx
-
-# For security
-/jupyter_notebook_config.json
+/Data/Run_*
+/Env
+/Figures
+/Packages/simul
+/References
+/Reports
+/Works
