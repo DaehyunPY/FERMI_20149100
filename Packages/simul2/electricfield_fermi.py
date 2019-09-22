@@ -61,6 +61,10 @@ class EFTwinFermiPulses(ElectricField):
         """Initialize EFTwinFermiPulses.
 
         Args:
+            tsamples (numpy.ndarray[shape: (n,), dtype: float]): Samples
+                of time to construct the twin pulses. It is assumed that
+                the sample values increase and the intervals are
+                constant.
             nharmonic (int): Harmonic number.
             seed_k0 (float): Photon energy of the seeds.
             seed_dt (float): Separation between the two seeds in time
@@ -76,6 +80,8 @@ class EFTwinFermiPulses(ElectricField):
             seed1st_ramp (float): Relative amplitude of the 1st seed.
             seed2nd_sigma (float): Transform-limited pulse duration
                 (standard deviation) of the 2nd seed intensities.
+                This argument is optional; if not given, it will be the
+                same with seed1st_sigma.
             seed2nd_ramp (float): Relative amplitude of the 2nd seed.
             ds_strength (float): Strength of the dispersive section.
             ebeam_energy (float): Electron beam nominal energy.
@@ -91,7 +97,7 @@ class EFTwinFermiPulses(ElectricField):
             Either are output values. To initialize an instance with
             your preferred units, use method EFTwinFermiPulses.in_units.
 
-            Each argument is related to the following arguments in the
+            Each argument is related to the following variables in the
             MATLAB code from Primož Rebernik Ribič, FERMI:
                 nharmonic = n
                 seed_k0 = lambdaseed = lambdaFEL / n
